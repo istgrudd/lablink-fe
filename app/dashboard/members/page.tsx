@@ -7,12 +7,21 @@ import { Member } from '@/app/types';
 import Card from '@/app/components/ui/Card';
 import Button from '@/app/components/ui/Button';
 import Table from '@/app/components/ui/Table';
+import Modal from '@/app/components/ui/Modal';
+import Toast from '@/app/components/ui/Toast';
+import { useToast } from '@/app/hooks/useToast';
 
 export default function MembersPage() {
   const router = useRouter();
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    member: Member | null;
+  }>({ isOpen: false, member: null });
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { toasts, removeToast, success, error: showError } = useToast();
 
   useEffect(() => {
     fetchMembers();
@@ -30,14 +39,23 @@ export default function MembersPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Yakin ingin menghapus member ini?')) return;
-    
+  const handleDeleteClick = (member: Member) => {
+    setDeleteModal({ isOpen: true, member });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.member) return;
+
     try {
-      await api.delete(`/members/${id}`);
-      setMembers(members.filter((m) => m.id !== id));
+      setIsDeleting(true);
+      await api.delete(`/members/${deleteModal.member.id}`);
+      setMembers(members.filter((m) => m.id !== deleteModal.member!.id));
+      success(`Member ${deleteModal.member.fullName} berhasil dihapus`);
+      setDeleteModal({ isOpen: false, member: null });
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete member');
+      showError(err instanceof Error ? err.message : 'Gagal menghapus member');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -96,7 +114,7 @@ export default function MembersPage() {
             variant="danger"
             onClick={(e) => {
               e.stopPropagation();
-              handleDelete(item.id);
+              handleDeleteClick(item);
             }}
           >
             Hapus
@@ -115,23 +133,56 @@ export default function MembersPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Members</h1>
-        <Button onClick={() => router.push('/dashboard/members/new')}>
-          + Tambah Member
-        </Button>
+    <>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900">Members</h1>
+          <Button onClick={() => router.push('/dashboard/members/new')}>
+            + Tambah Member
+          </Button>
+        </div>
+
+        <Card>
+          <Table
+            columns={columns}
+            data={members}
+            keyField="id"
+            isLoading={isLoading}
+            emptyMessage="Belum ada member"
+          />
+        </Card>
       </div>
 
-      <Card>
-        <Table
-          columns={columns}
-          data={members}
-          keyField="id"
-          isLoading={isLoading}
-          emptyMessage="Belum ada member"
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, member: null })}
+        onConfirm={handleDeleteConfirm}
+        title="Konfirmasi Hapus"
+        confirmText="Hapus"
+        cancelText="Batal"
+        variant="danger"
+        isLoading={isDeleting}
+      >
+        <p>
+          Apakah Anda yakin ingin menghapus member{' '}
+          <strong>{deleteModal.member?.fullName}</strong>?
+        </p>
+        <p className="text-sm text-gray-500 mt-2">
+          Tindakan ini tidak dapat dibatalkan. Member yang sudah menjadi ketua
+          proyek tidak dapat dihapus.
+        </p>
+      </Modal>
+
+      {/* Toast Notifications */}
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
         />
-      </Card>
-    </div>
+      ))}
+    </>
   );
 }
