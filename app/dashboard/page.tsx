@@ -3,9 +3,15 @@
 import { useEffect, useState } from 'react';
 import { api } from '@/app/lib/api';
 import { DashboardSummary } from '@/app/types';
+import { useAuth } from '@/app/context/AuthContext';
 import Card from '@/app/components/ui/Card';
+import StatCard from '@/app/components/ui/StatCard';
+import { CardSkeleton } from '@/app/components/ui/Skeleton';
+import EmptyState from '@/app/components/ui/EmptyState';
+import { Users, FolderOpen, Calendar, Archive, Clock, Activity } from 'lucide-react';
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [data, setData] = useState<DashboardSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,14 +32,6 @@ export default function DashboardPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
@@ -42,75 +40,115 @@ export default function DashboardPage() {
     );
   }
 
-  if (!data) return null;
-
-  const stats = data.statistics;
-
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+    <div className="space-y-8">
+      {/* Welcome Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl p-8 shadow-2xl text-white">
+        <h1 className="text-3xl font-bold mb-2">
+          Selamat Datang, {user?.fullName}! 👋
+        </h1>
+        <p className="text-blue-100">
+          Kelola laboratorium riset Anda dengan mudah dan efisien
+        </p>
+      </div>
 
       {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          title="Projects"
-          value={stats.totalProjects}
-          subtitle={`${stats.activeProjects} active`}
-          icon="📁"
-          color="blue"
-        />
-        <StatCard
-          title="Events"
-          value={stats.totalEvents}
-          subtitle={`${stats.ongoingEvents} ongoing`}
-          icon="📅"
-          color="green"
-        />
-        <StatCard
-          title="Members"
-          value={stats.totalMembers}
-          subtitle={`${stats.activeMembers} active`}
-          icon="👥"
-          color="purple"
-        />
-        <StatCard
-          title="Archives"
-          value={stats.totalArchives}
-          subtitle={`${stats.totalLetters} letters`}
-          icon="📦"
-          color="orange"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {isLoading ? (
+          <CardSkeleton count={4} />
+        ) : data ? (
+          <>
+            <StatCard
+              title="Total Members"
+              value={data.statistics.totalMembers}
+              subtitle={`${data.statistics.activeMembers} active`}
+              icon={Users}
+              color="blue"
+            />
+            <StatCard
+              title="Total Projects"
+              value={data.statistics.totalProjects}
+              subtitle={`${data.statistics.activeProjects} active`}
+              icon={FolderOpen}
+              color="green"
+            />
+            <StatCard
+              title="Total Events"
+              value={data.statistics.totalEvents}
+              subtitle={`${data.statistics.ongoingEvents} ongoing`}
+              icon={Calendar}
+              color="purple"
+            />
+            <StatCard
+              title="Total Archives"
+              value={data.statistics.totalArchives}
+              subtitle={`${data.statistics.totalLetters} letters`}
+              icon={Archive}
+              color="orange"
+            />
+          </>
+        ) : null}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Upcoming Deadlines */}
-        <Card title="Deadline Terdekat" subtitle="30 hari ke depan">
+        <Card>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
+              <Clock className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Deadline Terdekat</h2>
+              <p className="text-sm text-gray-500">30 hari ke depan</p>
+            </div>
+          </div>
+          
           <div className="space-y-3">
-            {data.upcomingDeadlines.length === 0 ? (
-              <p className="text-gray-500 text-sm">Tidak ada deadline terdekat</p>
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1,2,3].map((i) => (
+                  <div key={i} className="h-16 bg-gray-200 rounded-lg animate-pulse" />
+                ))}
+              </div>
+            ) : !data || data.upcomingDeadlines.length === 0 ? (
+              <div className="py-8">
+                <EmptyState
+                  title="Tidak ada deadline"
+                  description="Tidak ada project atau event dengan deadline dalam 30 hari ke depan"
+                  icon="events"
+                />
+              </div>
             ) : (
               data.upcomingDeadlines.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100 hover:shadow-md transition-all"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-lg">
-                      {item.type === 'PROJECT' ? '📁' : '📅'}
-                    </span>
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                      item.type === 'PROJECT' 
+                        ? 'bg-blue-100 text-blue-600' 
+                        : 'bg-purple-100 text-purple-600'
+                    }`}>
+                      {item.type === 'PROJECT' ? (
+                        <FolderOpen className="w-5 h-5" />
+                      ) : (
+                        <Calendar className="w-5 h-5" />
+                      )}
+                    </div>
                     <div>
-                      <p className="font-medium text-gray-900">{item.name}</p>
+                      <p className="font-semibold text-gray-900">{item.name}</p>
                       <p className="text-xs text-gray-500">{item.code}</p>
                     </div>
                   </div>
-                  <div className={`text-sm font-medium ${
-                    item.daysRemaining <= 3 ? 'text-red-600' :
-                    item.daysRemaining <= 7 ? 'text-orange-600' :
-                    'text-gray-600'
+                  <div className={`px-3 py-1 rounded-full text-sm font-bold ${
+                    item.daysRemaining <= 3 ? 'bg-red-100 text-red-700' :
+                    item.daysRemaining <= 7 ? 'bg-orange-100 text-orange-700' :
+                    'bg-gray-100 text-gray-700'
                   }`}>
-                    {item.daysRemaining === 0 ? 'Hari ini' :
+                    {item.daysRemaining === 0 ? 'Hari ini!' :
                      item.daysRemaining === 1 ? 'Besok' :
-                     `${item.daysRemaining} hari lagi`}
+                     `${item.daysRemaining} hari`}
                   </div>
                 </div>
               ))
@@ -119,72 +157,61 @@ export default function DashboardPage() {
         </Card>
 
         {/* Recent Activities */}
-        <Card title="Aktivitas Terbaru" subtitle="10 terakhir">
+        <Card>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+              <Activity className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Aktivitas Terbaru</h2>
+              <p className="text-sm text-gray-500">10 terakhir</p>
+            </div>
+          </div>
+
           <div className="space-y-3">
-            {data.recentActivities.length === 0 ? (
-              <p className="text-gray-500 text-sm">Belum ada aktivitas</p>
+            {isLoading ? (
+              <div className="space-y-3">
+                {[1,2,3].map((i) => (
+                  <div key={i} className="h-16 bg-gray-200 rounded-lg animate-pulse" />
+                ))}
+              </div>
+            ) : !data || data.recentActivities.length === 0 ? (
+              <div className="py-8">
+                <EmptyState
+                  title="Belum ada aktivitas"
+                  description="Aktivitas akan muncul di sini setelah ada perubahan data"
+                  icon="default"
+                />
+              </div>
             ) : (
               data.recentActivities.map((activity, idx) => (
                 <div
                   key={idx}
-                  className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg"
+                  className="flex items-start gap-3 p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100 hover:shadow-md transition-all"
                 >
-                  <span className="text-lg">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                    activity.action === 'CREATE' ? 'bg-green-100 text-green-600' :
+                    activity.action === 'UPDATE' ? 'bg-blue-100 text-blue-600' :
+                    activity.action === 'DELETE' ? 'bg-red-100 text-red-600' :
+                    'bg-gray-100 text-gray-600'
+                  }`}>
                     {activity.action === 'CREATE' ? '➕' :
                      activity.action === 'UPDATE' ? '✏️' :
                      activity.action === 'DELETE' ? '🗑️' : '🔵'}
-                  </span>
-                  <div className="flex-1">
+                  </div>
+                  <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-900">
-                      <span className="font-medium">{activity.userName}</span>
-                      {' '}
-                      {activity.action.toLowerCase()}
-                      {' '}
-                      <span className="font-medium">{activity.targetName}</span>
+                      <span className="font-bold">{activity.userName}</span>
+                      {' '}{activity.action.toLowerCase()}{' '}
+                      <span className="font-semibold">{activity.targetName}</span>
                     </p>
-                    <p className="text-xs text-gray-500">{activity.timeAgo}</p>
+                    <p className="text-xs text-gray-500 mt-1">{activity.timeAgo}</p>
                   </div>
                 </div>
               ))
             )}
           </div>
         </Card>
-      </div>
-    </div>
-  );
-}
-
-function StatCard({
-  title,
-  value,
-  subtitle,
-  icon,
-  color,
-}: {
-  title: string;
-  value: number;
-  subtitle: string;
-  icon: string;
-  color: 'blue' | 'green' | 'purple' | 'orange';
-}) {
-  const colors = {
-    blue: 'bg-blue-50 text-blue-600',
-    green: 'bg-green-50 text-green-600',
-    purple: 'bg-purple-50 text-purple-600',
-    orange: 'bg-orange-50 text-orange-600',
-  };
-
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-      <div className="flex items-center gap-4">
-        <div className={`w-12 h-12 rounded-xl ${colors[color]} flex items-center justify-center text-2xl`}>
-          {icon}
-        </div>
-        <div>
-          <p className="text-sm text-gray-500">{title}</p>
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          <p className="text-xs text-gray-400">{subtitle}</p>
-        </div>
       </div>
     </div>
   );

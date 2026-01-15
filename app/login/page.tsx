@@ -32,7 +32,14 @@ export default function LoginPage() {
       const response = await api.post<LoginResponse>('/auth/login', formData);
       api.setToken(response.token);
       authLogin(response.token, response.user);
-      router.push('/dashboard');
+      
+      // Check if user needs to change password
+      if (!response.user.isPasswordChanged) {
+        // Force redirect to profile page to change password
+        router.push('/dashboard/profile');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {

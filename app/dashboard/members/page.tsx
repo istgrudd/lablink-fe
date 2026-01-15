@@ -77,7 +77,7 @@ export default function MembersPage() {
               : 'bg-gray-100 text-gray-700'
           }`}
         >
-          {item.isActive ? 'Active' : 'Inactive'}
+          {item.isActive ? 'Mahasiswa' : 'Alumni'}
         </span>
       ),
     },
