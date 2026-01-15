@@ -4,11 +4,12 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/app/lib/api';
 import { LoginResponse } from '@/app/types';
+import { useAuth } from '@/app/context/AuthContext';
 import Button from '@/app/components/ui/Button';
-import Input from '@/app/components/ui/Input';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login: authLogin } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -30,6 +31,7 @@ export default function LoginPage() {
       
       const response = await api.post<LoginResponse>('/auth/login', formData);
       api.setToken(response.token);
+      authLogin(response.token, response.user);
       router.push('/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Login failed');

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/app/lib/api';
 import { Member } from '@/app/types';
+import { useAuth } from '@/app/context/AuthContext';
 import Card from '@/app/components/ui/Card';
 import Button from '@/app/components/ui/Button';
 import Table from '@/app/components/ui/Table';
@@ -13,6 +14,7 @@ import { useToast } from '@/app/hooks/useToast';
 
 export default function MembersPage() {
   const router = useRouter();
+  const { isAdmin } = useAuth();
   const [members, setMembers] = useState<Member[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -99,26 +101,32 @@ export default function MembersPage() {
       header: 'Aksi',
       render: (item: Member) => (
         <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={(e) => {
-              e.stopPropagation();
-              router.push(`/dashboard/members/${item.id}`);
-            }}
-          >
-            Edit
-          </Button>
-          <Button
-            size="sm"
-            variant="danger"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteClick(item);
-            }}
-          >
-            Hapus
-          </Button>
+          {isAdmin ? (
+            <>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  router.push(`/dashboard/members/${item.id}`);
+                }}
+              >
+                Edit
+              </Button>
+              <Button
+                size="sm"
+                variant="danger"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteClick(item);
+                }}
+              >
+                Hapus
+              </Button>
+            </>
+          ) : (
+            <span className="text-sm text-gray-400">Hanya Admin</span>
+          )}
         </div>
       ),
     },
@@ -137,9 +145,11 @@ export default function MembersPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Members</h1>
-          <Button onClick={() => router.push('/dashboard/members/new')}>
-            + Tambah Member
-          </Button>
+          {isAdmin && (
+            <Button onClick={() => router.push('/dashboard/members/new')}>
+              + Tambah Member
+            </Button>
+          )}
         </div>
 
         <Card>

@@ -20,6 +20,7 @@ export interface User {
   username: string;
   fullName: string;
   role: string;
+  isPasswordChanged: boolean;
 }
 
 // Member
