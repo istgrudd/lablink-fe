@@ -95,6 +95,45 @@ class ApiClient {
   delete<T>(endpoint: string): Promise<T> {
     return this.request<T>(endpoint, { method: 'DELETE' });
   }
+
+  // ==========================================
+  // Custom Feature Methods
+  // ==========================================
+
+  // Presence
+  async uploadPresence(data: any, file: File): Promise<any> {
+    const formData = new FormData();
+    formData.append('data', JSON.stringify(data));
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE_URL}/presence`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || 'Upload failed');
+    }
+
+    return response.json();
+  }
+
+  async getMyPresenceHistory(): Promise<any[]> {
+    return this.get('/presence/my-history');
+  }
+
+  async getAllPresence(params?: { type?: string; startDate?: string; endDate?: string }): Promise<any[]> {
+    const queryParams = new URLSearchParams();
+    if (params?.type) queryParams.append('type', params.type);
+    if (params?.startDate) queryParams.append('startDate', params.startDate);
+    if (params?.endDate) queryParams.append('endDate', params.endDate);
+    
+    return this.get(`/presence?${queryParams.toString()}`);
+  }
 }
 
 export const api = new ApiClient();

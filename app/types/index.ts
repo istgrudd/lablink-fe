@@ -104,3 +104,138 @@ export interface Period {
   isActive: boolean;
   isArchived: boolean;
 }
+
+// Project
+export interface MemberSummary {
+  id: string;
+  username: string;
+  fullName: string;
+  expertDivision: string;
+}
+
+export interface Project {
+  id: string;
+  projectCode: string;
+  name: string;
+  division: string;
+  activityType: string;
+  status: string;
+  startDate?: string;
+  endDate?: string;
+  description?: string;
+  progressPercent: number;
+  leader: MemberSummary;
+  teamMembers: MemberSummary[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateProjectRequest {
+  name: string;
+  division: string;
+  activityType: string;
+  status: string;
+  startDate?: string;
+  endDate?: string;
+  description?: string;
+  progressPercent: number;
+  leaderId: string;
+  teamMemberIds: string[];
+}
+
+export interface UpdateProjectRequest {
+  name?: string;
+  division?: string;
+  activityType?: string;
+  status?: string;
+  startDate?: string;
+  endDate?: string;
+  description?: string;
+  progressPercent?: number;
+  leaderId?: string;
+  teamMemberIds?: string[];
+}
+
+// Event
+export interface CommitteeMember {
+  memberId: string;
+  username: string;
+  fullName: string;
+  role: string;
+}
+
+export interface Event {
+  id: string;
+  eventCode: string;
+  name: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+  pic: MemberSummary;
+  committee: CommitteeMember[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateEventRequest {
+  name: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  picId: string;
+}
+
+export interface UpdateEventRequest {
+  name?: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+  status?: string;
+  picId?: string;
+  committee?: { memberId: string; role: string }[];
+}
+
+// Archive
+export interface ArchiveSource {
+  id: string;
+  code: string;
+  name: string;
+  leader: string;
+}
+
+export interface Archive {
+  id: string;
+  archiveCode: string;
+  title: string;
+  description: string;
+  archiveType: string;
+  department: string;
+  sourceType: string;
+  source: ArchiveSource;
+  publishLocation: string;
+  referenceNumber: string;
+  publishDate: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateArchiveRequest {
+  title: string;
+  description?: string;
+  archiveType: string;
+  sourceType: string;
+  projectId?: string;
+  eventId?: string;
+  publishLocation?: string;
+  referenceNumber?: string;
+  publishDate?: string;
+}
+
+export interface UpdateArchiveRequest {
+  title?: string;
+  description?: string;
+  publishLocation?: string;
+  referenceNumber?: string;
+  publishDate?: string;
+}

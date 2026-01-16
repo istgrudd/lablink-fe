@@ -14,7 +14,8 @@ import {
   FileText,
   LogOut,
   Zap,
-  ChevronRight
+  ChevronRight,
+  CheckSquare
 } from 'lucide-react';
 
 const menuItems = [
@@ -23,6 +24,7 @@ const menuItems = [
   { href: '/dashboard/projects', label: 'Projects', icon: FolderOpen },
   { href: '/dashboard/events', label: 'Events', icon: Calendar },
   { href: '/dashboard/archives', label: 'Archives', icon: Archive },
+  { href: '/dashboard/presence', label: 'Presensi', icon: CheckSquare },
   { href: '/dashboard/letters', label: 'Surat', icon: Mail },
   { href: '/dashboard/periods', label: 'Periode', icon: CalendarDays },
   { href: '/dashboard/activity-logs', label: 'Activity Log', icon: FileText },
