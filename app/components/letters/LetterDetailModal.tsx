@@ -108,7 +108,7 @@ export default function LetterDetailModal({
         )}
 
         <div className="text-xs text-gray-400 pt-2 border-t border-gray-100">
-          Dibuat oleh: {letter.createdBy || '-'}
+          Dibuat oleh: {letter.requesterName || '-'}
         </div>
       </div>
     </Modal>
