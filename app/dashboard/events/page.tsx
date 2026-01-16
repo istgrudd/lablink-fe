@@ -209,43 +209,42 @@ export default function EventsPage() {
 
         <Card>
           {/* Filters */}
-          <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-4 justify-between">
-            <div className="w-full md:w-64">
+          {/* Filters */}
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="flex-1">
               <input
                 type="text"
                 placeholder="Cari event / kode..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
               />
             </div>
-            <div className="flex flex-wrap gap-2">
-               <div className="w-40">
-                  <Select
-                    label=""
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    options={[
-                      { value: 'ALL', label: 'Semua Status' },
-                      { value: 'PLANNED', label: 'Planned' },
-                      { value: 'ONGOING', label: 'Ongoing' },
-                      { value: 'COMPLETED', label: 'Completed' },
-                    ]}
-                  />
-               </div>
-               <div className="w-40">
-                  <Select
-                    label=""
-                    value={sortConfig}
-                    onChange={(e) => setSortConfig(e.target.value)}
-                    options={[
-                      { value: 'newest', label: 'Terbaru' },
-                      { value: 'oldest', label: 'Terlama' },
-                      { value: 'name_asc', label: 'Nama (A-Z)' },
-                      { value: 'name_desc', label: 'Nama (Z-A)' },
-                    ]}
-                  />
-               </div>
+            <div className="w-full md:w-48">
+              <Select
+                label=""
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                options={[
+                  { value: 'ALL', label: 'Semua Status' },
+                  { value: 'PLANNED', label: 'Planned' },
+                  { value: 'ONGOING', label: 'Ongoing' },
+                  { value: 'COMPLETED', label: 'Completed' },
+                ]}
+              />
+            </div>
+            <div className="w-full md:w-48">
+              <Select
+                label=""
+                value={sortConfig}
+                onChange={(e) => setSortConfig(e.target.value)}
+                options={[
+                  { value: 'newest', label: 'Terbaru' },
+                  { value: 'oldest', label: 'Terlama' },
+                  { value: 'name_asc', label: 'Nama (A-Z)' },
+                  { value: 'name_desc', label: 'Nama (Z-A)' },
+                ]}
+              />
             </div>
           </div>
 

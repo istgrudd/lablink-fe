@@ -190,57 +190,56 @@ export default function ArchivesPage() {
 
         <Card>
           {/* Filters */}
-          <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-4 justify-between">
-            <div className="w-full md:w-64">
+          {/* Filters */}
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="flex-1">
               <input
                 type="text"
                 placeholder="Cari judul / kode / sumber..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
               />
             </div>
-            <div className="flex flex-wrap gap-2">
-              <div className="w-36">
-                <Select
-                  label=""
-                  value={filterType}
-                  onChange={(e) => setFilterType(e.target.value)}
-                  options={[
-                    { value: 'ALL', label: 'Semua Tipe' },
-                    { value: 'PUBLIKASI', label: 'Publikasi' },
-                    { value: 'HKI', label: 'HKI' },
-                    { value: 'PKM', label: 'PKM' },
-                    { value: 'LAPORAN', label: 'Laporan' },
-                    { value: 'SERTIFIKAT', label: 'Sertifikat' },
-                  ]}
-                />
-              </div>
-              <div className="w-36">
-                <Select
-                  label=""
-                  value={filterDepartment}
-                  onChange={(e) => setFilterDepartment(e.target.value)}
-                  options={[
-                    { value: 'ALL', label: 'Semua Sumber' },
-                    { value: 'INTERNAL', label: 'Project' },
-                    { value: 'EKSTERNAL', label: 'Event' },
-                  ]}
-                />
-              </div>
-              <div className="w-36">
-                <Select
-                  label=""
-                  value={sortConfig}
-                  onChange={(e) => setSortConfig(e.target.value)}
-                  options={[
-                    { value: 'newest', label: 'Terbaru' },
-                    { value: 'oldest', label: 'Terlama' },
-                    { value: 'title_asc', label: 'Judul (A-Z)' },
-                    { value: 'title_desc', label: 'Judul (Z-A)' },
-                  ]}
-                />
-              </div>
+            <div className="w-full md:w-48">
+              <Select
+                label=""
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                options={[
+                  { value: 'ALL', label: 'Semua Tipe' },
+                  { value: 'PUBLIKASI', label: 'Publikasi' },
+                  { value: 'HKI', label: 'HKI' },
+                  { value: 'PKM', label: 'PKM' },
+                  { value: 'LAPORAN', label: 'Laporan' },
+                  { value: 'SERTIFIKAT', label: 'Sertifikat' },
+                ]}
+              />
+            </div>
+            <div className="w-full md:w-48">
+              <Select
+                label=""
+                value={filterDepartment}
+                onChange={(e) => setFilterDepartment(e.target.value)}
+                options={[
+                  { value: 'ALL', label: 'Semua Sumber' },
+                  { value: 'INTERNAL', label: 'Project' },
+                  { value: 'EKSTERNAL', label: 'Event' },
+                ]}
+              />
+            </div>
+            <div className="w-full md:w-48">
+              <Select
+                label=""
+                value={sortConfig}
+                onChange={(e) => setSortConfig(e.target.value)}
+                options={[
+                  { value: 'newest', label: 'Terbaru' },
+                  { value: 'oldest', label: 'Terlama' },
+                  { value: 'title_asc', label: 'Judul (A-Z)' },
+                  { value: 'title_desc', label: 'Judul (Z-A)' },
+                ]}
+              />
             </div>
           </div>
 

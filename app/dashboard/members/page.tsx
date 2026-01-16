@@ -185,44 +185,43 @@ export default function MembersPage() {
 
         <Card>
           {/* Filters */}
-          <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-4 justify-between">
-            <div className="w-full md:w-64">
+          {/* Filters */}
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="flex-1">
               <input
                 type="text"
                 placeholder="Cari member..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
               />
             </div>
-            <div className="flex gap-2">
-               <div className="w-40">
-                  <Select
-                    label=""
-                    value={filterDivision}
-                    onChange={(e) => setFilterDivision(e.target.value)}
-                    options={[
-                      { value: 'ALL', label: 'Semua Divisi' },
-                      { value: 'BIG_DATA', label: 'Big Data' },
-                      { value: 'CYBER_SECURITY', label: 'Cyber Security' },
-                      { value: 'GAME_TECH', label: 'Game Tech' },
-                      { value: 'GIS', label: 'GIS' },
-                    ]}
-                  />
-               </div>
-               <div className="w-40">
-                  <Select
-                    label=""
-                    value={sortConfig}
-                    onChange={(e) => setSortConfig(e.target.value)}
-                    options={[
-                      { value: 'name_asc', label: 'Nama (A-Z)' },
-                      { value: 'name_desc', label: 'Nama (Z-A)' },
-                      { value: 'nim_asc', label: 'NIM (Asc)' },
-                      { value: 'nim_desc', label: 'NIM (Desc)' },
-                    ]}
-                  />
-               </div>
+            <div className="w-full md:w-48">
+              <Select
+                label=""
+                value={filterDivision}
+                onChange={(e) => setFilterDivision(e.target.value)}
+                options={[
+                  { value: 'ALL', label: 'Semua Divisi' },
+                  { value: 'BIG_DATA', label: 'Big Data' },
+                  { value: 'CYBER_SECURITY', label: 'Cyber Security' },
+                  { value: 'GAME_TECH', label: 'Game Tech' },
+                  { value: 'GIS', label: 'GIS' },
+                ]}
+              />
+            </div>
+            <div className="w-full md:w-48">
+              <Select
+                label=""
+                value={sortConfig}
+                onChange={(e) => setSortConfig(e.target.value)}
+                options={[
+                  { value: 'name_asc', label: 'Nama (A-Z)' },
+                  { value: 'name_desc', label: 'Nama (Z-A)' },
+                  { value: 'nim_asc', label: 'NIM (Asc)' },
+                  { value: 'nim_desc', label: 'NIM (Desc)' },
+                ]}
+              />
             </div>
           </div>
 

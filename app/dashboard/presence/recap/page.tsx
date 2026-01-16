@@ -29,6 +29,7 @@ export default function PresenceRecapPage() {
   const [selectedType, setSelectedType] = useState('MEETING');
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 1-12
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [searchQuery, setSearchQuery] = useState('');
 
   const MONTHS = [
     { value: 1, label: 'Jan' },
@@ -153,35 +154,47 @@ export default function PresenceRecapPage() {
         </div>
         
         {/* Filters */}
-        <div className="flex flex-wrap gap-2">
-           <div className="w-48">
-            <Select
-              label=""
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              options={PRESENCE_TYPES}
-            />
-           </div>
-           <div className="w-32">
-            <Select
-              label=""
-              value={String(selectedMonth)}
-              onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              options={MONTHS.map(m => ({ value: String(m.value), label: m.label }))}
-            />
-           </div>
-           <div className="w-24">
-            <Select
-              label=""
-              value={String(selectedYear)}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              options={YEARS.map(y => ({ value: String(y.value), label: y.label }))}
-            />
-           </div>
-        </div>
+        {/* Filters Removed from Header */}
       </div>
 
       <Card className="overflow-hidden">
+        {/* Filters & Search */}
+        <div className="p-4 flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Cari anggota..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+              />
+            </div>
+            <div className="w-full md:w-48">
+              <Select
+                label=""
+                value={selectedType}
+                onChange={(e) => setSelectedType(e.target.value)}
+                options={PRESENCE_TYPES}
+              />
+            </div>
+            <div className="w-full md:w-32">
+              <Select
+                label=""
+                value={String(selectedMonth)}
+                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                options={MONTHS.map(m => ({ value: String(m.value), label: m.label }))}
+              />
+            </div>
+            <div className="w-full md:w-32">
+              <Select
+                label=""
+                value={String(selectedYear)}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                options={YEARS.map(y => ({ value: String(y.value), label: y.label }))}
+              />
+            </div>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -204,7 +217,12 @@ export default function PresenceRecapPage() {
                   </td>
                 </tr>
               ) : (
-                members.map((member) => (
+                members
+                  .filter(m => 
+                    m.fullName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                    m.expertDivision.toLowerCase().includes(searchQuery.toLowerCase())
+                  )
+                  .map((member) => (
                   <tr key={member.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 sticky left-0 bg-white shadow-sm">
                       {member.fullName}

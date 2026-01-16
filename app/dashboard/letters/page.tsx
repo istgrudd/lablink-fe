@@ -202,7 +202,7 @@ export default function LettersPage() {
       header: 'No. Surat',
       render: (item: Letter) => (
         <span className={item.letterNumber ? 'font-mono text-sm' : 'text-gray-400 italic'}>
-          {item.letterNumber || 'Menunggu Approval'}
+          {item.letterNumber || (item.status === 'REJECTED' ? '-' : 'Menunggu Approval')}
         </span>
       ),
     },
@@ -364,44 +364,53 @@ export default function LettersPage() {
       {activeTab === 'outgoing' ? (
         <Card>
           {/* Filters */}
-          <div className="flex flex-wrap gap-4 mb-4">
-            <input
-              type="text"
-              placeholder="Cari nomor / perihal / pemohon..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-            />
-            <Select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              options={[
-                { value: 'ALL', label: 'Semua Jenis' },
-                { value: 'PMJ', label: 'Peminjaman' },
-                { value: 'IZN', label: 'Izin' },
-                { value: 'STF', label: 'Sertifikat' },
-                { value: 'SP', label: 'Surat Pengantar' },
-                { value: 'UND', label: 'Undangan' },
-              ]}
-            />
-            <Select
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              options={[
-                { value: 'ALL', label: 'Semua Status' },
-                { value: 'PENDING', label: 'Menunggu' },
-                { value: 'APPROVED', label: 'Disetujui' },
-                { value: 'REJECTED', label: 'Ditolak' },
-              ]}
-            />
-            <Select
-              value={sortConfig}
-              onChange={(e) => setSortConfig(e.target.value)}
-              options={[
-                { value: 'newest', label: 'Terbaru' },
-                { value: 'oldest', label: 'Terlama' },
-              ]}
-            />
+          {/* Filters */}
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="flex-1">
+              <input
+                type="text"
+                placeholder="Cari nomor / perihal / pemohon..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+              />
+            </div>
+            <div className="w-full md:w-48">
+              <Select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                options={[
+                  { value: 'ALL', label: 'Semua Jenis' },
+                  { value: 'PMJ', label: 'Peminjaman' },
+                  { value: 'IZN', label: 'Izin' },
+                  { value: 'STF', label: 'Sertifikat' },
+                  { value: 'SP', label: 'Surat Pengantar' },
+                  { value: 'UND', label: 'Undangan' },
+                ]}
+              />
+            </div>
+            <div className="w-full md:w-48">
+              <Select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                options={[
+                  { value: 'ALL', label: 'Semua Status' },
+                  { value: 'PENDING', label: 'Menunggu' },
+                  { value: 'APPROVED', label: 'Disetujui' },
+                  { value: 'REJECTED', label: 'Ditolak' },
+                ]}
+              />
+            </div>
+            <div className="w-full md:w-48">
+              <Select
+                value={sortConfig}
+                onChange={(e) => setSortConfig(e.target.value)}
+                options={[
+                  { value: 'newest', label: 'Terbaru' },
+                  { value: 'oldest', label: 'Terlama' },
+                ]}
+              />
+            </div>
           </div>
 
           {isLoading ? (

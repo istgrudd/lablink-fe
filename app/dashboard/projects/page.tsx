@@ -229,58 +229,57 @@ export default function ProjectsPage() {
 
         <Card>
           {/* Filters */}
-          <div className="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-4 justify-between">
-            <div className="w-full md:w-64">
+          {/* Filters */}
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
+            <div className="flex-1">
               <input
                 type="text"
                 placeholder="Cari proyek / kode..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                className="w-full px-4 py-2.5 text-sm bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
               />
             </div>
-            <div className="flex flex-wrap gap-2">
-               <div className="w-40">
-                  <Select
-                    label=""
-                    value={filterDivision}
-                    onChange={(e) => setFilterDivision(e.target.value)}
-                    options={[
-                      { value: 'ALL', label: 'Semua Divisi' },
-                      { value: 'BIG_DATA', label: 'Big Data' },
-                      { value: 'CYBER_SECURITY', label: 'Cyber Security' },
-                      { value: 'GAME_TECH', label: 'Game Tech' },
-                      { value: 'GIS', label: 'GIS' },
-                    ]}
-                  />
-               </div>
-               <div className="w-40">
-                  <Select
-                    label=""
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                    options={[
-                      { value: 'ALL', label: 'Semua Status' },
-                      { value: 'NOT_STARTED', label: 'Not Started' },
-                      { value: 'IN_PROGRESS', label: 'In Progress' },
-                      { value: 'ON_HOLD', label: 'On Hold' },
-                      { value: 'COMPLETED', label: 'Completed' },
-                    ]}
-                  />
-               </div>
-               <div className="w-40">
-                  <Select
-                    label=""
-                    value={sortConfig}
-                    onChange={(e) => setSortConfig(e.target.value)}
-                    options={[
-                      { value: 'newest', label: 'Terbaru' },
-                      { value: 'oldest', label: 'Terlama' },
-                      { value: 'name_asc', label: 'Nama (A-Z)' },
-                      { value: 'name_desc', label: 'Nama (Z-A)' },
-                    ]}
-                  />
-               </div>
+            <div className="w-full md:w-48">
+              <Select
+                label=""
+                value={filterDivision}
+                onChange={(e) => setFilterDivision(e.target.value)}
+                options={[
+                  { value: 'ALL', label: 'Semua Divisi' },
+                  { value: 'BIG_DATA', label: 'Big Data' },
+                  { value: 'CYBER_SECURITY', label: 'Cyber Security' },
+                  { value: 'GAME_TECH', label: 'Game Tech' },
+                  { value: 'GIS', label: 'GIS' },
+                ]}
+              />
+            </div>
+            <div className="w-full md:w-48">
+              <Select
+                label=""
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                options={[
+                  { value: 'ALL', label: 'Semua Status' },
+                  { value: 'NOT_STARTED', label: 'Not Started' },
+                  { value: 'IN_PROGRESS', label: 'In Progress' },
+                  { value: 'ON_HOLD', label: 'On Hold' },
+                  { value: 'COMPLETED', label: 'Completed' },
+                ]}
+              />
+            </div>
+            <div className="w-full md:w-48">
+              <Select
+                label=""
+                value={sortConfig}
+                onChange={(e) => setSortConfig(e.target.value)}
+                options={[
+                  { value: 'newest', label: 'Terbaru' },
+                  { value: 'oldest', label: 'Terlama' },
+                  { value: 'name_asc', label: 'Nama (A-Z)' },
+                  { value: 'name_desc', label: 'Nama (Z-A)' },
+                ]}
+              />
             </div>
           </div>
 
