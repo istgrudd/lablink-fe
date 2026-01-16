@@ -239,3 +239,74 @@ export interface UpdateArchiveRequest {
   referenceNumber?: string;
   publishDate?: string;
 }
+
+// Letter (Surat)
+export interface LetterEventSummary {
+  id: string;
+  eventCode: string;
+  name: string;
+}
+
+export interface Letter {
+  id: string;
+  letterNumber: string | null;  // null until approved
+  letterType: string;
+  category: string;
+  subject: string;
+  recipient: string;
+  content: string;
+  attachment: string;
+  
+  // Requester info (auto-filled)
+  requesterName: string;
+  requesterNim: string;
+  
+  // Borrow date and Return Date
+  borrowDate: string;
+  borrowReturnDate: string;
+  
+  // Dates
+  issueDate: string | null;  // Set on approval
+  
+  // Status: PENDING, APPROVED, REJECTED
+  status: string;
+  
+  // Approval info
+  approvedBy: string;
+  rejectionReason: string;
+  
+  event?: LetterEventSummary;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateLetterRequest {
+  letterType: string;
+  category: string;
+  subject: string;
+  recipient: string;
+  content?: string;
+  attachment?: string;
+  eventId?: string;
+  borrowDate?: string;
+  borrowReturnDate?: string;
+}
+
+export interface IncomingLetter {
+  id: string;
+  senderName: string;
+  senderInstitution: string;
+  subject: string;
+  receivedDate: string;
+  notes: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateIncomingLetterRequest {
+  senderName: string;
+  senderInstitution: string;
+  subject: string;
+  receivedDate: string;
+  notes?: string;
+}

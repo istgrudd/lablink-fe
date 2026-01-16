@@ -1,0 +1,463 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { api } from '@/app/lib/api';
+import { Letter, IncomingLetter } from '@/app/types';
+import { useAuth } from '@/app/context/AuthContext';
+import Card from '@/app/components/ui/Card';
+import Button from '@/app/components/ui/Button';
+import Table from '@/app/components/ui/Table';
+import Select from '@/app/components/ui/Select';
+import LetterDetailModal from '@/app/components/letters/LetterDetailModal';
+import Modal from '@/app/components/ui/Modal';
+import Toast from '@/app/components/ui/Toast';
+import { useToast } from '@/app/hooks/useToast';
+
+const TYPE_LABELS: Record<string, string> = {
+  PMJ: 'Peminjaman',
+  IZN: 'Izin',
+  STF: 'Sertifikat',
+  SP: 'Surat Pengantar',
+  UND: 'Undangan',
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  RK: 'Rektorat',
+  INT: 'Internal',
+  EXT: 'Eksternal',
+  WSH: 'Workshop',
+};
+
+const STATUS_STYLES: Record<string, string> = {
+  PENDING: 'bg-yellow-100 text-yellow-700',
+  APPROVED: 'bg-green-100 text-green-700',
+  REJECTED: 'bg-red-100 text-red-700',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  PENDING: 'Menunggu',
+  APPROVED: 'Disetujui',
+  REJECTED: 'Ditolak',
+};
+
+export default function LettersPage() {
+  const router = useRouter();
+  const { isAdmin } = useAuth();
+  const [activeTab, setActiveTab] = useState<'outgoing' | 'incoming'>('outgoing');
+  
+  const [letters, setLetters] = useState<Letter[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const [incomingLetters, setIncomingLetters] = useState<IncomingLetter[]>([]);
+  const [isLoadingIncoming, setIsLoadingIncoming] = useState(false);
+
+  const [selectedLetter, setSelectedLetter] = useState<Letter | null>(null);
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; letter: Letter | null }>({ isOpen: false, letter: null });
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState('ALL');
+  const [filterStatus, setFilterStatus] = useState('ALL');
+  const [sortConfig, setSortConfig] = useState('newest');
+
+  const { toasts, removeToast, success, error: showError } = useToast();
+
+  useEffect(() => {
+    fetchLetters();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'incoming' && incomingLetters.length === 0) {
+      fetchIncomingLetters();
+    }
+  }, [activeTab]);
+
+  const fetchLetters = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get<Letter[]>('/administration/letters');
+      setLetters(response);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Gagal memuat surat');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchIncomingLetters = async () => {
+    try {
+      setIsLoadingIncoming(true);
+      const response = await api.get<IncomingLetter[]>('/administration/letters/incoming');
+      setIncomingLetters(response);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : 'Gagal memuat surat masuk');
+    } finally {
+      setIsLoadingIncoming(false);
+    }
+  };
+
+  const handleDeleteClick = (letter: Letter) => {
+    setDeleteModal({ isOpen: true, letter });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.letter) return;
+    try {
+      setIsDeleting(true);
+      await api.delete(`/administration/letters/${deleteModal.letter.id}`);
+      setLetters(letters.filter((l) => l.id !== deleteModal.letter!.id));
+      success(`Surat berhasil dihapus`);
+      setDeleteModal({ isOpen: false, letter: null });
+    } catch (err) {
+      showError(err instanceof Error ? err.message : 'Gagal menghapus surat');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleApprove = async (letter: Letter) => {
+    try {
+      setIsApproving(true);
+      const updated = await api.patch<Letter>(`/administration/letters/${letter.id}/approve`);
+      setLetters(letters.map(l => l.id === letter.id ? updated : l));
+      success(`Surat berhasil disetujui. Nomor: ${updated.letterNumber}`);
+    } catch (err) {
+      showError(err instanceof Error ? err.message : 'Gagal menyetujui surat');
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  const handleReject = async (letter: Letter) => {
+    try {
+      setIsApproving(true);
+      const updated = await api.patch<Letter>(`/administration/letters/${letter.id}/reject?reason=Tidak memenuhi syarat`);
+      setLetters(letters.map(l => l.id === letter.id ? updated : l));
+      success('Surat berhasil ditolak');
+    } catch (err) {
+      showError(err instanceof Error ? err.message : 'Gagal menolak surat');
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  const handleDownload = async (letter: Letter) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `http://localhost:8081/api/administration/letters/${letter.id}/download`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Gagal mendownload dokumen');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Surat_${letter.letterNumber?.replace(/\//g, '-') || letter.id}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      success('Dokumen berhasil didownload');
+    } catch (err) {
+      showError(err instanceof Error ? err.message : 'Gagal mendownload dokumen');
+    }
+  };
+
+  const filteredLetters = letters
+    .filter(letter => {
+      const matchSearch =
+        letter.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (letter.letterNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
+        letter.recipient.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        letter.requesterName?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchType = filterType === 'ALL' || letter.letterType === filterType;
+      const matchStatus = filterStatus === 'ALL' || letter.status === filterStatus;
+      return matchSearch && matchType && matchStatus;
+    })
+    .sort((a, b) => {
+      switch (sortConfig) {
+        case 'oldest': return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case 'newest': default: return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+    });
+
+  const outgoingColumns = [
+    {
+      key: 'letterNumber',
+      header: 'No. Surat',
+      render: (item: Letter) => (
+        <span className={item.letterNumber ? 'font-mono text-sm' : 'text-gray-400 italic'}>
+          {item.letterNumber || 'Menunggu Approval'}
+        </span>
+      ),
+    },
+    {
+      key: 'requesterName',
+      header: 'Pemohon',
+      render: (item: Letter) => (
+        <div>
+          <div className="font-medium">{item.requesterName}</div>
+          <div className="text-xs text-gray-500">{item.requesterNim}</div>
+        </div>
+      ),
+    },
+    { key: 'subject', header: 'Perihal' },
+    {
+      key: 'letterType',
+      header: 'Jenis',
+      render: (item: Letter) => (
+        <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+          {TYPE_LABELS[item.letterType] || item.letterType}
+        </span>
+      ),
+    },
+    {
+      key: 'event',
+      header: 'Kegiatan',
+      render: (item: Letter) => (
+        <span className="text-sm text-gray-600">
+          {item.event?.name || '-'}
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (item: Letter) => (
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${STATUS_STYLES[item.status] || 'bg-gray-100'}`}>
+          {STATUS_LABELS[item.status] || item.status}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Aksi',
+      render: (item: Letter) => (
+        <div className="flex gap-1 flex-wrap">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedLetter(item);
+            }}
+          >
+            Detail
+          </Button>
+          
+          {/* Admin: Approve/Reject for PENDING */}
+          {isAdmin && item.status === 'PENDING' && (
+            <>
+              <Button
+                size="sm"
+                variant="primary"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleApprove(item);
+                }}
+                disabled={isApproving}
+              >
+                ✅ Setujui
+              </Button>
+              <Button
+                size="sm"
+                variant="danger"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleReject(item);
+                }}
+                disabled={isApproving}
+              >
+                ❌ Tolak
+              </Button>
+            </>
+          )}
+
+          {/* Download for APPROVED only */}
+          {item.status === 'APPROVED' && (
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownload(item);
+              }}
+            >
+              ⬇️ Download
+            </Button>
+          )}
+
+          {isAdmin && (
+            <Button
+              size="sm"
+              variant="danger"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDeleteClick(item);
+              }}
+            >
+              🗑️
+            </Button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  const incomingColumns = [
+    { key: 'referenceNumber', header: 'No. Referensi' },
+    { key: 'sender', header: 'Pengirim' },
+    { key: 'subject', header: 'Perihal' },
+    {
+      key: 'receivedDate',
+      header: 'Tanggal Diterima',
+      render: (item: IncomingLetter) => (
+        <span className="text-sm">
+          {new Date(item.receivedDate).toLocaleDateString('id-ID')}
+        </span>
+      ),
+    },
+  ];
+
+  return (
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Surat / Administrasi</h1>
+        </div>
+        <Button onClick={() => router.push('/dashboard/letters/new')}>
+          + Buat Surat
+        </Button>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex space-x-4 mb-6 border-b">
+        <button
+          onClick={() => setActiveTab('outgoing')}
+          className={`pb-2 px-4 ${activeTab === 'outgoing' ? 'border-b-2 border-blue-500 text-blue-600 font-medium' : 'text-gray-500'}`}
+        >
+          📤 Surat Keluar
+        </button>
+        <button
+          onClick={() => setActiveTab('incoming')}
+          className={`pb-2 px-4 ${activeTab === 'incoming' ? 'border-b-2 border-blue-500 text-blue-600 font-medium' : 'text-gray-500'}`}
+        >
+          📥 Surat Masuk
+        </button>
+      </div>
+
+      {activeTab === 'outgoing' ? (
+        <Card>
+          {/* Filters */}
+          <div className="flex flex-wrap gap-4 mb-4">
+            <input
+              type="text"
+              placeholder="Cari nomor / perihal / pemohon..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+            <Select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              options={[
+                { value: 'ALL', label: 'Semua Jenis' },
+                { value: 'PMJ', label: 'Peminjaman' },
+                { value: 'IZN', label: 'Izin' },
+                { value: 'STF', label: 'Sertifikat' },
+                { value: 'SP', label: 'Surat Pengantar' },
+                { value: 'UND', label: 'Undangan' },
+              ]}
+            />
+            <Select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              options={[
+                { value: 'ALL', label: 'Semua Status' },
+                { value: 'PENDING', label: 'Menunggu' },
+                { value: 'APPROVED', label: 'Disetujui' },
+                { value: 'REJECTED', label: 'Ditolak' },
+              ]}
+            />
+            <Select
+              value={sortConfig}
+              onChange={(e) => setSortConfig(e.target.value)}
+              options={[
+                { value: 'newest', label: 'Terbaru' },
+                { value: 'oldest', label: 'Terlama' },
+              ]}
+            />
+          </div>
+
+          {isLoading ? (
+            <div className="text-center py-8 text-gray-500">Memuat...</div>
+          ) : error ? (
+            <div className="text-center py-8 text-red-500">{error}</div>
+          ) : filteredLetters.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">Tidak ada surat</div>
+          ) : (
+            <Table data={filteredLetters} columns={outgoingColumns} keyField="id" />
+          )}
+        </Card>
+      ) : (
+        <Card>
+          {isLoadingIncoming ? (
+            <div className="text-center py-8 text-gray-500">Memuat...</div>
+          ) : incomingLetters.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">Tidak ada surat masuk</div>
+          ) : (
+            <Table data={incomingLetters} columns={incomingColumns} keyField="id" />
+          )}
+        </Card>
+      )}
+
+      {/* Detail Modal */}
+      {selectedLetter && (
+        <LetterDetailModal
+          isOpen={!!selectedLetter}
+          onClose={() => setSelectedLetter(null)}
+          letter={selectedLetter}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, letter: null })}
+        onConfirm={handleDeleteConfirm}
+        title="Konfirmasi Hapus"
+        confirmText="Hapus"
+        cancelText="Batal"
+        variant="danger"
+        isLoading={isDeleting}
+      >
+        <p>Apakah Anda yakin ingin menghapus surat ini?</p>
+      </Modal>
+
+      {/* Toast Notifications */}
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
+    </>
+  );
+}

@@ -21,6 +21,7 @@ const expertDivisions = [
 const departments = [
   { value: 'INTERNAL', label: 'Internal' },
   { value: 'EKSTERNAL', label: 'Eksternal' },
+  { value: 'IT_SUPPORT', label: 'IT Support' },
 ];
 
 export default function EditMemberPage() {
