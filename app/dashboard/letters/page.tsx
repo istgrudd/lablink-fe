@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/app/lib/api';
 import { Letter, IncomingLetter } from '@/app/types';
 import { useAuth } from '@/app/context/AuthContext';
+import { usePeriod } from '@/app/hooks/usePeriod';
 import Card from '@/app/components/ui/Card';
 import Button from '@/app/components/ui/Button';
 import Table from '@/app/components/ui/Table';
@@ -44,6 +45,7 @@ const STATUS_LABELS: Record<string, string> = {
 export default function LettersPage() {
   const router = useRouter();
   const { isAdmin } = useAuth();
+  const { selectedPeriod, isReadOnly } = usePeriod();
   const [activeTab, setActiveTab] = useState<'outgoing' | 'incoming'>('outgoing');
   
   const [letters, setLetters] = useState<Letter[]>([]);
@@ -65,27 +67,30 @@ export default function LettersPage() {
 
   const { toasts, removeToast, success, error: showError } = useToast();
 
-  useEffect(() => {
-    fetchLetters();
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === 'incoming' && incomingLetters.length === 0) {
-      fetchIncomingLetters();
-    }
-  }, [activeTab]);
-
-  const fetchLetters = async () => {
+  const fetchLetters = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await api.get<Letter[]>('/administration/letters');
+      const endpoint = selectedPeriod 
+        ? `/administration/letters?periodId=${selectedPeriod.id}` 
+        : '/administration/letters';
+      const response = await api.get<Letter[]>(endpoint);
       setLetters(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal memuat surat');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedPeriod]);
+
+  useEffect(() => {
+    fetchLetters();
+  }, [fetchLetters]);
+
+  useEffect(() => {
+    if (activeTab === 'incoming' && incomingLetters.length === 0) {
+      fetchIncomingLetters();
+    }
+  }, [activeTab]);
 
   const fetchIncomingLetters = async () => {
     try {
@@ -261,7 +266,7 @@ export default function LettersPage() {
           </Button>
           
           {/* Admin: Approve/Reject for PENDING */}
-          {isAdmin && item.status === 'PENDING' && (
+          {isAdmin && !isReadOnly && item.status === 'PENDING' && (
             <>
               <Button
                 size="sm"
@@ -302,7 +307,7 @@ export default function LettersPage() {
             </Button>
           )}
 
-          {isAdmin && (
+          {isAdmin && !isReadOnly && (
             <Button
               size="sm"
               variant="danger"
@@ -337,12 +342,12 @@ export default function LettersPage() {
   return (
     <>
       <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Surat / Administrasi</h1>
-        </div>
-        <Button onClick={() => router.push('/dashboard/letters/new')}>
-          + Buat Surat
-        </Button>
+        <h1 className="text-2xl font-bold text-gray-800">Surat / Administrasi</h1>
+        {!isReadOnly && (
+          <Button onClick={() => router.push('/dashboard/letters/new')}>
+            + Buat Surat
+          </Button>
+        )}
       </div>
 
       {/* Tabs */}

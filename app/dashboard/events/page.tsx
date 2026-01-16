@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/app/lib/api';
 import { Event } from '@/app/types';
 import { useAuth } from '@/app/context/AuthContext';
+import { usePeriod } from '@/app/hooks/usePeriod';
 import Card from '@/app/components/ui/Card';
 import Button from '@/app/components/ui/Button';
 import Table from '@/app/components/ui/Table';
@@ -18,6 +19,7 @@ import { useToast } from '@/app/hooks/useToast';
 export default function EventsPage() {
   const router = useRouter();
   const { isAdmin } = useAuth();
+  const { selectedPeriod, isReadOnly } = usePeriod();
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,21 +43,24 @@ export default function EventsPage() {
 
   const { toasts, removeToast, success, error: showError } = useToast();
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
-
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await api.get<Event[]>('/events');
+      const endpoint = selectedPeriod 
+          ? `/events?periodId=${selectedPeriod.id}` 
+          : '/events';
+      const response = await api.get<Event[]>(endpoint);
       setEvents(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load events');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedPeriod]);
+
+  useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
 
   const handleDeleteClick = (event: Event) => {
     setDeleteModal({ isOpen: true, event });
@@ -146,7 +151,7 @@ export default function EventsPage() {
            >
              Detail
            </Button>
-          {isAdmin && item.status === 'COMPLETED' && (
+          {isAdmin && !isReadOnly && item.status === 'COMPLETED' && (
             <Button
               size="sm"
               variant="ghost"
@@ -158,7 +163,7 @@ export default function EventsPage() {
               📁 Arsipkan
             </Button>
           )}
-          {isAdmin && (
+          {isAdmin && !isReadOnly && (
             <>
               <Button
                 size="sm"
@@ -200,7 +205,7 @@ export default function EventsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Events / Kegiatan</h1>
-          {isAdmin && (
+          {isAdmin && !isReadOnly && (
             <Button onClick={() => router.push('/dashboard/events/new')}>
               + Buat Event
             </Button>
@@ -208,7 +213,6 @@ export default function EventsPage() {
         </div>
 
         <Card>
-          {/* Filters */}
           {/* Filters */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1">
@@ -247,7 +251,7 @@ export default function EventsPage() {
               />
             </div>
           </div>
-
+          
           <Table
             columns={columns}
             data={filteredEvents}

@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { api } from '@/app/lib/api';
 import { Archive } from '@/app/types';
 import { useAuth } from '@/app/context/AuthContext';
+import { usePeriod } from '@/app/hooks/usePeriod';
 import Card from '@/app/components/ui/Card';
 import Button from '@/app/components/ui/Button';
 import Table from '@/app/components/ui/Table';
@@ -15,6 +16,7 @@ import { useToast } from '@/app/hooks/useToast';
 
 export default function ArchivesPage() {
   const { isAdmin } = useAuth();
+  const { selectedPeriod, isReadOnly } = usePeriod();
   const [archives, setArchives] = useState<Archive[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -35,21 +37,25 @@ export default function ArchivesPage() {
 
   const { toasts, removeToast, success, error: showError } = useToast();
 
-  useEffect(() => {
-    fetchArchives();
-  }, []);
-
-  const fetchArchives = async () => {
+  const fetchArchives = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await api.get<Archive[]>('/archives');
-      setArchives(response);
+      
+      const endpoint = selectedPeriod 
+          ? `/archives?periodId=${selectedPeriod.id}` 
+          : '/archives';
+        const response = await api.get<Archive[]>(endpoint);
+        setArchives(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Gagal memuat arsip');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedPeriod]);
+
+  useEffect(() => {
+    fetchArchives();
+  }, [fetchArchives]);
 
   const handleDeleteClick = (archive: Archive) => {
     setDeleteModal({ isOpen: true, archive });
@@ -155,7 +161,7 @@ export default function ArchivesPage() {
           >
             Detail
           </Button>
-          {isAdmin && (
+          {isAdmin && !isReadOnly && (
             <Button
               size="sm"
               variant="danger"
@@ -241,6 +247,7 @@ export default function ArchivesPage() {
                 ]}
               />
             </div>
+            {/* Admin-only: Show orphan archives filter */}
           </div>
 
           <Table

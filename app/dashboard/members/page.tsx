@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/app/lib/api';
-import { Member } from '@/app/types';
+import { Member, MemberPeriod } from '@/app/types';
 import { useAuth } from '@/app/context/AuthContext';
+import { usePeriod } from '@/app/hooks/usePeriod';
 import Card from '@/app/components/ui/Card';
 import Button from '@/app/components/ui/Button';
 import Table from '@/app/components/ui/Table';
-import Link from 'next/link';
 import Select from '@/app/components/ui/Select';
 import Modal from '@/app/components/ui/Modal';
 import Toast from '@/app/components/ui/Toast';
@@ -17,7 +17,9 @@ import { useToast } from '@/app/hooks/useToast';
 export default function MembersPage() {
   const router = useRouter();
   const { isAdmin } = useAuth();
+  const { selectedPeriod, isReadOnly } = usePeriod();
   const [members, setMembers] = useState<Member[]>([]);
+  const [memberPeriods, setMemberPeriods] = useState<MemberPeriod[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleteModal, setDeleteModal] = useState<{
@@ -32,21 +34,35 @@ export default function MembersPage() {
   const [filterDivision, setFilterDivision] = useState('ALL');
   const [sortConfig, setSortConfig] = useState('name_asc');
 
-  useEffect(() => {
-    fetchMembers();
-  }, []);
-
-  const fetchMembers = async () => {
+  // Fetch members based on period
+  const fetchMembers = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await api.get<Member[]>('/members');
-      setMembers(response);
+      
+      if (selectedPeriod) {
+        // Fetch members in selected period
+        const periodMembers = await api.get<MemberPeriod[]>(`/periods/${selectedPeriod.id}/members`);
+        setMemberPeriods(periodMembers);
+        // Also fetch all members for full data
+        const allMembers = await api.get<Member[]>('/members');
+        // Filter to only show members in this period
+        const memberIds = new Set(periodMembers.map(mp => mp.memberId));
+        setMembers(allMembers.filter(m => memberIds.has(m.id)));
+      } else {
+        const response = await api.get<Member[]>('/members');
+        setMembers(response);
+        setMemberPeriods([]);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load members');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedPeriod]);
+
+  useEffect(() => {
+    fetchMembers();
+  }, [fetchMembers]);
 
   const filteredMembers = members
     .filter(member => {
@@ -92,17 +108,30 @@ export default function MembersPage() {
     {
       key: 'isActive',
       header: 'Status',
-      render: (item: Member) => (
-        <span
-          className={`px-2 py-1 rounded-full text-xs font-medium ${
-            item.isActive
-              ? 'bg-green-100 text-green-700'
-              : 'bg-gray-100 text-gray-700'
-          }`}
-        >
-          {item.isActive ? 'Mahasiswa' : 'Alumni'}
-        </span>
-      ),
+      render: (item: Member) => {
+        // If viewing a specific period, show status from memberPeriods
+        if (selectedPeriod && memberPeriods.length > 0) {
+          const mp = memberPeriods.find(mp => mp.memberId === item.id);
+          if (mp) {
+            const isActive = mp.status === 'ACTIVE';
+            return (
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+              }`}>
+                {isActive ? 'Aktif' : 'Alumni'}
+              </span>
+            );
+          }
+        }
+        // Default: use member's global isActive status
+        return (
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+            item.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
+          }`}>
+            {item.isActive ? 'Mahasiswa' : 'Alumni'}
+          </span>
+        );
+      },
     },
     {
       key: 'role',
@@ -134,7 +163,7 @@ export default function MembersPage() {
            >
              Detail
            </Button>
-          {isAdmin && (
+          {isAdmin && !isReadOnly && (
             <>
               <Button
                 size="sm"
@@ -176,7 +205,7 @@ export default function MembersPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Members</h1>
-          {isAdmin && (
+          {isAdmin && !isReadOnly && (
             <Button onClick={() => router.push('/dashboard/members/new')}>
               + Tambah Member
             </Button>
@@ -184,7 +213,6 @@ export default function MembersPage() {
         </div>
 
         <Card>
-          {/* Filters */}
           {/* Filters */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1">
@@ -224,7 +252,7 @@ export default function MembersPage() {
               />
             </div>
           </div>
-
+          
           <Table
             columns={columns}
             data={filteredMembers}

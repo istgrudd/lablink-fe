@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8081/api';
 
 class ApiClient {
   private token: string | null = null;
@@ -59,7 +59,16 @@ class ApiClient {
       return {} as T;
     }
 
-    return response.json();
+    const text = await response.text();
+    if (!text) {
+      return {} as T;
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error('Invalid JSON response');
+    }
   }
 
   // GET

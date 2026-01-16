@@ -45,6 +45,7 @@ export interface CreateMemberRequest {
   fullName: string;
   expertDivision: string;
   department: string;
+  position?: string; // Jabatan dalam periode
 }
 
 export interface UpdateMemberRequest {
@@ -103,6 +104,37 @@ export interface Period {
   endDate: string;
   isActive: boolean;
   isArchived: boolean;
+  totalMembers: number;
+  totalProjects: number;
+  totalEvents: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreatePeriodRequest {
+  code: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+}
+
+export interface ClosePeriodRequest {
+  newPeriodId: string;
+  continuingMemberIds: string[];
+}
+
+export interface MemberPeriod {
+  memberId: string;
+  memberName: string;
+  memberNim: string;
+  periodCode: string;
+  status: string; // ACTIVE | ALUMNI
+  position: string;
+}
+
+export interface AddMemberToPeriodRequest {
+  memberId: string;
+  position: string;
 }
 
 // Project

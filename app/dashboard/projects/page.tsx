@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/app/lib/api';
 import { Project } from '@/app/types';
 import { useAuth } from '@/app/context/AuthContext';
+import { usePeriod } from '@/app/hooks/usePeriod';
 import Card from '@/app/components/ui/Card';
 import Button from '@/app/components/ui/Button';
 import Table from '@/app/components/ui/Table';
@@ -18,6 +19,7 @@ import { useToast } from '@/app/hooks/useToast';
 export default function ProjectsPage() {
   const router = useRouter();
   const { isAdmin } = useAuth();
+  const { selectedPeriod, isReadOnly } = usePeriod();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -42,21 +44,26 @@ export default function ProjectsPage() {
 
   const { toasts, removeToast, success, error: showError } = useToast();
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
-
-  const fetchProjects = async () => {
+  // Fetch projects when period changes
+  const fetchProjects = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await api.get<Project[]>('/projects');
+      const endpoint = selectedPeriod 
+          ? `/projects?periodId=${selectedPeriod.id}` 
+          : '/projects';
+        
+      const response = await api.get<Project[]>(endpoint);
       setProjects(response);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load projects');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedPeriod]);
+
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
 
   const handleDeleteClick = (project: Project) => {
     setDeleteModal({ isOpen: true, project });
@@ -166,7 +173,7 @@ export default function ProjectsPage() {
            >
              Detail
            </Button>
-          {isAdmin && item.status === 'COMPLETED' && (
+           {isAdmin && !isReadOnly && item.status === 'COMPLETED' && (
             <Button
               size="sm"
               variant="ghost"
@@ -178,7 +185,7 @@ export default function ProjectsPage() {
               📁 Arsipkan
             </Button>
           )}
-          {isAdmin && (
+          {isAdmin && !isReadOnly && (
             <>
               <Button
                 size="sm"
@@ -220,7 +227,7 @@ export default function ProjectsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900">Projects</h1>
-          {isAdmin && (
+          {isAdmin && !isReadOnly && (
             <Button onClick={() => router.push('/dashboard/projects/new')}>
               + Buat Proyek
             </Button>
@@ -228,7 +235,6 @@ export default function ProjectsPage() {
         </div>
 
         <Card>
-          {/* Filters */}
           {/* Filters */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1">

@@ -23,6 +23,12 @@ const departments = [
   { value: 'IT_SUPPORT', label: 'IT Support' },
 ];
 
+const positions = [
+  { value: 'ANGGOTA', label: 'Anggota' },
+  { value: 'KOORDINATOR', label: 'Koordinator' },
+  { value: 'STAFF_AHLI', label: 'Staff Ahli' },
+];
+
 export default function CreateMemberPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -31,6 +37,7 @@ export default function CreateMemberPage() {
     fullName: '',
     expertDivision: 'BIG_DATA',
     department: 'INTERNAL',
+    position: 'ANGGOTA',
   });
   const { toasts, removeToast, success, error: showError } = useToast();
 
@@ -124,11 +131,30 @@ export default function CreateMemberPage() {
               </div>
             </div>
 
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Jabatan dalam Periode
+              </label>
+              <select
+                name="position"
+                value={formData.position}
+                onChange={handleChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {positions.map((pos) => (
+                  <option key={pos.value} value={pos.value}>
+                    {pos.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
               <p className="font-medium">ℹ️ Informasi:</p>
               <ul className="list-disc list-inside mt-2 space-y-1">
                 <li>Password default = NIM</li>
                 <li>Member harus mengganti password saat login pertama kali</li>
+                <li>Member otomatis terdaftar di periode aktif</li>
               </ul>
             </div>
 

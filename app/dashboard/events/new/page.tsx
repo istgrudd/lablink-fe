@@ -51,6 +51,14 @@ export default function NewEventPage() {
         return;
     }
 
+    // Date validation: startDate must not be after endDate
+    const start = new Date(formData.startDate);
+    const end = new Date(formData.endDate);
+    if (start > end) {
+      showError('Tanggal mulai tidak boleh setelah tanggal selesai');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       await api.post('/events', formData);

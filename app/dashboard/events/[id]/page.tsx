@@ -118,6 +118,14 @@ export default function EditEventPage({ params }: { params: Promise<{ id: string
         return;
     }
 
+    // Date validation: startDate must not be after endDate
+    const start = new Date(formData.startDate);
+    const end = new Date(formData.endDate);
+    if (start > end) {
+      showError('Tanggal mulai tidak boleh setelah tanggal selesai');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       

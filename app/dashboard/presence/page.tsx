@@ -6,12 +6,14 @@ import Link from 'next/link';
 import { Presence } from '@/app/types/presence';
 import Card from '@/app/components/ui/Card';
 import Button from '@/app/components/ui/Button';
-import { Camera, Calendar, FileText, Upload, Clock, CheckCircle } from 'lucide-react';
+import { Camera, Calendar, FileText, Upload, Clock, CheckCircle, Lock } from 'lucide-react';
 import { useAuth } from '@/app/context/AuthContext';
+import { usePeriod } from '@/app/hooks/usePeriod';
 import Select from '@/app/components/ui/Select';
 
 export default function PresencePage() {
   const { user } = useAuth();
+  const { isReadOnly, selectedPeriod, activePeriod } = usePeriod();
   const [history, setHistory] = useState<Presence[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -131,7 +133,8 @@ export default function PresencePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Input Form */}
+        {/* Input Form - Only show when not in read-only mode */}
+        {!isReadOnly ? (
         <div className="lg:col-span-1">
           <Card>
             <div className="flex items-center gap-3 mb-6">
@@ -247,6 +250,24 @@ export default function PresencePage() {
             </form>
           </Card>
         </div>
+        ) : (
+        <div className="lg:col-span-1">
+          <Card>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                <Lock className="w-5 h-5 text-gray-500" />
+              </div>
+              <h2 className="text-lg font-bold text-gray-900">Input Kehadiran</h2>
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-center">
+              <p className="text-amber-700 font-medium">Mode Read-Only</p>
+              <p className="text-sm text-amber-600 mt-1">
+                Anda sedang melihat data periode arsip. Input presensi tidak tersedia.
+              </p>
+            </div>
+          </Card>
+        </div>
+        )}
 
         {/* History List */}
         <div className="lg:col-span-2">

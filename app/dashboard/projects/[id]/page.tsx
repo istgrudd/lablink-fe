@@ -100,6 +100,16 @@ export default function EditProjectPage({ params }: { params: Promise<{ id: stri
         return;
     }
 
+    // Date validation: startDate must not be after endDate
+    if (formData.startDate && formData.endDate) {
+      const start = new Date(formData.startDate);
+      const end = new Date(formData.endDate);
+      if (start > end) {
+        showError('Tanggal mulai tidak boleh setelah tanggal selesai');
+        return;
+      }
+    }
+
     try {
       setIsSubmitting(true);
       await api.put(`/projects/${projectId}`, formData);
