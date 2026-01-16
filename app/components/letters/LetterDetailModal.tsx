@@ -67,11 +67,12 @@ export default function LetterDetailModal({
           <div>
             <label className="text-xs text-gray-500 uppercase tracking-wide font-semibold">Tanggal</label>
             <p className="text-sm text-gray-900 mt-1">
-              {new Date(letter.issueDate).toLocaleDateString('id-ID', {
+              {/* Kita kasih pengecekan: Kalau ada tanggalnya baru diformat, kalau tidak ada strip (-) */}
+              {letter.issueDate ? new Date(letter.issueDate).toLocaleDateString('id-ID', {
                 day: 'numeric',
                 month: 'long',
                 year: 'numeric',
-              })}
+              }) : '-'}
             </p>
           </div>
         </div>
