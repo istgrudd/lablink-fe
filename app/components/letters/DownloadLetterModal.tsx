@@ -62,7 +62,7 @@ export default function DownloadLetterModal({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Surat_${letter.letterNumber.replace(/\//g, '-')}.docx`;
+      a.download = `Surat_${(letter.letterNumber || 'Draft').replace(/\//g, '-')}.docx`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
